@@ -14,10 +14,6 @@ struct ContentView: View {
     @State private var sleepAmount = 8.0
     @State private var coffeeAmount = 1
     
-    @State private var alertTitle = ""
-    @State private var alertMessage = ""
-    @State private var showingAlert = false
-    
     static var defaultWakeTime: Date {
         var components = DateComponents()
         components.hour = 7
@@ -25,51 +21,7 @@ struct ContentView: View {
         return Calendar.current.date(from: components) ?? Date.now
     }
     
-    var body: some View {
-        
-        NavigationView {
-            Form {
-                VStack(alignment: .leading, spacing: 0) {
-                    Text("When you want to wake up?")
-                        .font(.headline)
-                    
-                    DatePicker("Please select a time", selection: $wakeUp, displayedComponents: .hourAndMinute)
-                        .labelsHidden()
-                }
-                
-                VStack(alignment: .leading, spacing: 0) {
-                    Text("Desired amount of sleep")
-                        .font(.headline)
-                    
-                    Stepper("\(sleepAmount.formatted()) hours", value: $sleepAmount, in: 4...12, step: 0.25)
-                }
-                
-                VStack(alignment: .leading, spacing: 0) {
-                    Text("Daily coffee intake")
-                        .font(.headline)
-                    
-                    Picker("Daily coffee intake", selection: $coffeeAmount) {
-                        ForEach((1...20), id: \.self) {
-                            Text("\($0)")
-                        }
-                    }
-                    
-                }
-            }
-            .navigationTitle("BetterRest")
-            .toolbar {
-                Button("Calculate", action: calculateBedtime)
-            }
-            .alert(alertTitle, isPresented: $showingAlert) {
-                Button("OK") { }
-            } message: {
-                Text(alertMessage)
-            }
-        }
-        
-    }
-    
-    func calculateBedtime() {
+    var sleepResults: String {
         
         do {
             let config = MLModelConfiguration()
@@ -85,16 +37,61 @@ struct ContentView: View {
             // Date they should go to sleep
             let sleepTime = wakeUp - prediction.actualSleep
             
-            alertTitle = "Your ideal bedtime is..."
-            alertMessage = sleepTime.formatted(date: .omitted, time: .shortened)
+            return sleepTime.formatted(date: .omitted, time: .shortened)
             
             // More code here
         } catch {
-            alertTitle = "Error"
-            alertMessage = "Sorry, it seems something went wrong."
+            return "There was an error"
         }
+    }
+    
+    var body: some View {
         
-        showingAlert = true
+        NavigationView {
+            VStack {
+                Form {
+                    Section {
+                        VStack(alignment: .leading, spacing: 0) {
+                            Text("When you want to wake up?")
+                                .font(.headline)
+                            
+                            DatePicker("Please select a time", selection: $wakeUp, displayedComponents: .hourAndMinute)
+                                .labelsHidden()
+                        }
+                        
+                        VStack(alignment: .leading, spacing: 0) {
+                            Text("Desired amount of sleep")
+                                .font(.headline)
+                            
+                            Stepper("\(sleepAmount.formatted()) hours", value: $sleepAmount, in: 4...12, step: 0.25)
+                        }
+                        
+                        VStack(alignment: .leading, spacing: 0) {
+                            Text("Daily coffee intake")
+                                .font(.headline)
+                            
+                            Picker("Daily coffee intake", selection: $coffeeAmount) {
+                                ForEach((1...20), id: \.self) {
+                                    Text("\($0)")
+                                }
+                            }
+                        }
+                    }
+                    
+                    Section {
+                        VStack(alignment: .center, spacing: 8) {
+                            Text("Recommended sleep")
+                                .fontWeight(.medium)
+                                .foregroundStyle(.secondary)
+                            Text(sleepResults)
+                                .font(.title)
+                        }
+                        .frame(maxWidth: .infinity)
+                    }
+                }
+                .navigationTitle("BetterRest")
+            }
+        }
         
     }
     
