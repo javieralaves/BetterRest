@@ -48,7 +48,12 @@ struct ContentView: View {
                     Text("Daily coffee intake")
                         .font(.headline)
                     
-                    Stepper(coffeeAmount == 1 ? "1 cup" : "\(coffeeAmount) cups", value: $coffeeAmount, in: 1...20, step: 1)
+                    Picker("Daily coffee intake", selection: $coffeeAmount) {
+                        ForEach((1...20), id: \.self) {
+                            Text("\($0)")
+                        }
+                    }
+                    
                 }
             }
             .navigationTitle("BetterRest")
